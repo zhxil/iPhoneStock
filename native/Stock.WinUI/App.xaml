@@ -1,0 +1,34 @@
+<Application x:Class="Stock.WinUI.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries><XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" /></ResourceDictionary.MergedDictionaries>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+          <SolidColorBrush x:Key="StockAvailableBrush" Color="#78D9A0" />
+          <SolidColorBrush x:Key="StockUnknownBrush" Color="#FFC56D" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="StockAvailableBrush" Color="#147A40" />
+          <SolidColorBrush x:Key="StockUnknownBrush" Color="#8A4C00" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="HighContrast">
+          <SolidColorBrush x:Key="StockAvailableBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+          <SolidColorBrush x:Key="StockUnknownBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+      <Style x:Key="StockCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="18" />
+      </Style>
+      <Style x:Key="StockCardDividerStyle" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+      </Style>
+      <Style x:Key="StockPendingStyle" TargetType="TextBlock"><Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" /></Style>
+      <Style x:Key="StockAvailableStyle" TargetType="TextBlock"><Setter Property="Foreground" Value="{ThemeResource StockAvailableBrush}" /></Style>
+      <Style x:Key="StockUnknownStyle" TargetType="TextBlock"><Setter Property="Foreground" Value="{ThemeResource StockUnknownBrush}" /></Style>
+    </ResourceDictionary>
+  </Application.Resources>
+</Application>

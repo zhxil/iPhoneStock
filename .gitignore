@@ -1,0 +1,18 @@
+.tools/
+.pnpm-store/
+upstream/
+**/bin/
+**/obj/
+dist/
+artifacts/
+android/.gradle/
+android/**/build/
+android/local.properties
+
+# Local signing material and machine-specific credentials
+*.p12
+*.jks
+*.keystore
+.env
+.env.*
+

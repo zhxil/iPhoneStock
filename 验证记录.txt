@@ -1,0 +1,29 @@
+验证记录（2026-10-17，Asia/Shanghai）
+实现：纯 C# / .NET 10 + 原生 WinUI 3，未使用 Rust 后端或进程。
+参考：ENCHIGO/apple-pickup-watcher，66c1da29941ba30cfa7cc13ba1b8f95a65f5f692。
+默认：青岛万象城 R557，iPhone Duo 512GB 星光白色 MK2P4CH/A。
+
+核心检查：21/21 通过（artifacts/build-final.log）。
+最终发布：无编译错误；依赖显式固定后不再出现 NU1603。
+实网 C# 查询：2026-10-17 15:53:56，Apple 返回当前不可到店取货（artifacts/live-probe.json）。
+UI Automation：查询、开始、暂停、关窗隐藏保留进程、重复启动恢复窗口均通过（artifacts/ui-checks.json）。
+最终包后台：窗口隐藏期间 15:57:30、15:58:30 两轮真实查询，均为不可到店取货。
+重启恢复：已保存的 120 秒间隔在重启后显示正确（测试使用独立配置目录，不影响默认60秒）。
+提醒：本机托盘测试提醒已提交，未配置 Bark/飞书，不声称手机送达。
+正常退出：通过；最终运行错误日志数 0（artifacts/final-lifecycle.json）。
+实际截图检查：中文标题、默认商品、库存状态、折叠设置区、按钮均可读。
+
+验证中保留的失败：沙箱中的 TLS 和托盘访问失败，在真实用户桌面环境中通过；后台脚本最初按换行数统计轮数不适配 WinUI ValuePattern 文本，调整为按商品结果标记计数，保留了两轮原始日志。
+限制：未做干净虚拟机验证；没有开机自启、在线目录刷新或自动更新。
+真实库存随时变化，以上结果仅代表各自查询时刻。
+
+任务栏与开机启动追加验证（16:15）
+最终构建：artifacts/build-taskbar-startup.log，21 项核心检查通过。
+状态条是 Shell_TrayWnd 的真实子窗口，位置 x=320..628，现有 Codex 小工具位置 x=10..310，两者没有重叠。
+实际截图已检查：任务栏中显示“iPhone · 监控中 | 无货 · 00:45”。
+单击状态条恢复主窗口、关窗后继续后台监控通过。
+右键菜单实际选择开始/暂停（menu-result=2）和隐藏（menu-result=4）已记录于隔离测试 taskbar-events.log；显示开关已在设置中恢复。
+原生菜单不通过本机 UI Automation 暴露菜单项，验证改用 Win32 菜单项目录和真实鼠标点击。回执 artifacts/taskbar-checks.json。
+按用户要求已实际启用 HKCU Run/QingdaoIphoneStock，命令指向正式 dist 程序并带 --startup。
+--startup 入口实测：主窗口隐藏、任务栏状态条显示监控中、默认目标保持正确。未重启电脑，不声称完成真实重启验收。
+当前正式进程使用实际用户配置，已在后台监控；独立测试数据留在 artifacts。
