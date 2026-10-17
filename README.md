@@ -10,8 +10,8 @@ Windows 使用 **C# / .NET 10 / WinUI 3**，Android 使用 **Kotlin / Jetpack Co
 
 | 平台 | 当前版本 | 下载文件 | 使用方式 |
 | --- | --- | --- | --- |
-| Windows x64 | 1.3.1 | `iPhone库存助手-Windows-x64.zip` | 解压后运行目录内的 `IphoneStock.exe`，保留整个文件夹；无需另装 .NET |
-| Android 8.0+ | 1.1.0 | `iPhone库存助手-Android-v1.1.0.apk` | 安装 APK，允许通知，然后开始后台监控 |
+| Windows x64 | 1.3.1 | `iPhoneStock-Windows-x64-v1.3.1.zip` | 解压后运行目录内的 `IphoneStock.exe`，保留整个文件夹；无需另装 .NET |
+| Android 8.0+ | 1.1.0 | `iPhoneStock-Android-v1.1.0.apk` | 安装 APK，允许通知，然后开始后台监控 |
 
 默认目标为青岛万象城的 iPhone Duo 512GB 星光白色，可在目标页修改城市、直营店和商品。内置目录来自参考项目快照，不在线更新；商品是否可售及实际库存以 Apple 官网为准。工具不自动下单、不预留库存。
 
@@ -69,7 +69,7 @@ Android 需允许通知并按需调整省电策略。Android 15+ 的 `dataSync` 
 ./scripts/package.ps1
 ```
 
-可用 `-Dotnet '<dotnet.exe路径>'` 指定 SDK，`-FallbackPackages '<NuGet缓存目录>'` 指定依赖缓存。默认输出 `dist/青岛iPhone库存助手`，保留此路径以兼容已有启动配置；公开压缩包名称为 `iPhone库存助手-Windows-x64.zip`。
+可用 `-Dotnet '<dotnet.exe路径>'` 指定 SDK，`-FallbackPackages '<NuGet缓存目录>'` 指定依赖缓存。默认输出 `dist/青岛iPhone库存助手`，保留此路径以兼容已有启动配置；公开压缩包名称为 `iPhoneStock-Windows-x64-v1.3.1.zip`。
 
 ### Android
 
