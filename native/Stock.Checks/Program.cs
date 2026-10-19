@@ -48,6 +48,39 @@ using (var client = new AppleClient(fake))
     await client.CheckAsync([target], "山东 青岛", CancellationToken.None);
     Check(fake.PickupCalls == 1, "manual recheck cannot bypass cooldown");
 }
+foreach (var code in new[] { 403, 541, 429 })
+{
+    var warmBlocked = new SequenceHandler(code);
+    using var guarded = new AppleClient(warmBlocked);
+    var result = await guarded.CheckAsync([target], "山东 青岛", CancellationToken.None);
+    await guarded.CheckAsync([target], "山东 青岛", CancellationToken.None);
+    Check(result[0].Kind == StockKind.Unknown && warmBlocked.Calls == 1 && guarded.NextAllowed > DateTimeOffset.UtcNow.AddSeconds(110),
+        $"warm-up HTTP {code} stops pickup and manual retries");
+}
+foreach (var raw in new[] { "bad", "1", "180", "9223372036854775807", "Wed, 21 Oct 2037 07:28:00 GMT" })
+{
+    var limited = new SequenceHandler(429, raw);
+    using var guarded = new AppleClient(limited);
+    var result = await guarded.CheckAsync([target], "山东 青岛", CancellationToken.None);
+    Check(result[0].Kind == StockKind.Unknown && guarded.NextAllowed > DateTimeOffset.UtcNow.AddSeconds(raw == "180" ? 170 : 110),
+        $"Retry-After safely respected: {raw}");
+}
+var cooldownPath = Path.Combine(dir, "request-cooldown.txt");
+using (var first = new AppleClient(new SequenceHandler(541), cooldownPath))
+    await first.CheckAsync([target], "山东 青岛", CancellationToken.None);
+var afterRestart = new SequenceHandler(200);
+using (var restored = new AppleClient(afterRestart, cooldownPath))
+{
+    var result = await restored.CheckAsync([target], "山东 青岛", CancellationToken.None);
+    Check(result[0].Kind == StockKind.Unknown && afterRestart.Calls == 0, "restart preserves blocked cooldown without network requests");
+}
+File.WriteAllText(cooldownPath, "broken");
+var corruptRequests = new SequenceHandler(200);
+using (var restored = new AppleClient(corruptRequests, cooldownPath))
+{
+    await restored.CheckAsync([target], "山东 青岛", CancellationToken.None);
+    Check(corruptRequests.Calls == 0, "corrupt cooldown record fails closed for 15 minutes");
+}
 Check(!Directory.GetFiles(dir, "*.tmp").Any(), "atomic save leaves no temporary files");
 Console.WriteLine($"{passed} checks passed. Fixtures: {dir}");
 
@@ -59,5 +92,17 @@ sealed class FakeHandler : HttpMessageHandler
         var pickup = request.RequestUri!.AbsolutePath.Contains("pickup-message");
         if (pickup) PickupCalls++;
         return Task.FromResult(new HttpResponseMessage(pickup ? (HttpStatusCode)541 : HttpStatusCode.OK) { Content = new StringContent("{}") });
+    }
+}
+
+sealed class SequenceHandler(int code, string? retry = null) : HttpMessageHandler
+{
+    public int Calls;
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        Calls++;
+        var response = new HttpResponseMessage((HttpStatusCode)code) { Content = new StringContent("<html>blocked</html>") };
+        if (retry is not null) response.Headers.TryAddWithoutValidation("Retry-After", retry);
+        return Task.FromResult(response);
     }
 }

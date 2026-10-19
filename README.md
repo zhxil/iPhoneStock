@@ -113,6 +113,8 @@ cd iPhoneStock
 
 Android 首次构建会在 `.tools/android-signing` 生成本地签名密钥，请自行备份。自行构建的 APK 与 Release 签名不同，不能覆盖安装发布包。SDK 缓存、签名私钥、本机配置和发布产物不进入 Git。
 
+请求节流、拦截处理与本次修复见 [Apple 请求风控检查](docs/apple-request-policy.md)。
+
 ## 验证
 
 Windows 已通过 21 项核心检查，并完成界面交互、后台生命周期及四页深色→浅色→深色切换验证。Android 已通过 27 项 JVM 检查，并完成 AOSP Android 36 模拟器交互验证。

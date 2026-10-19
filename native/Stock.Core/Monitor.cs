@@ -26,7 +26,7 @@ public sealed class Monitor(AppleClient client, Catalog catalog)
             foreach (var group in settings.Targets.GroupBy(t => catalog.Stores.FirstOrDefault(s => s.Number == t.StoreNumber)?.Location ?? "山东 青岛"))
             {
                 var wait = client.NextAllowed - DateTimeOffset.UtcNow;
-                if (wait > TimeSpan.Zero) { Scheduled?.Invoke(client.NextAllowed); await Task.Delay(wait, token); }
+                if (wait > TimeSpan.Zero) { Scheduled?.Invoke(client.NextAllowed); await WaitUntilAsync(client.NextAllowed, token); }
                 var results = await client.CheckAsync(group.ToArray(), group.Key, token);
                 Results?.Invoke(results);
                 foreach (var result in results) if (arrivals.Update(result)) Arrived?.Invoke(result);
@@ -42,7 +42,19 @@ public sealed class Monitor(AppleClient client, Catalog catalog)
             var next = DateTimeOffset.UtcNow.AddSeconds(settings().IntervalSeconds);
             if (client.NextAllowed > next) next = client.NextAllowed;
             Scheduled?.Invoke(next);
-            await Task.Delay(next - DateTimeOffset.UtcNow > TimeSpan.Zero ? next - DateTimeOffset.UtcNow : TimeSpan.Zero, token);
+            await WaitUntilAsync(next, token);
         }
     }
+    private static async Task WaitUntilAsync(DateTimeOffset next, CancellationToken token)
+    {
+        // Long Retry-After values must not overflow Task.Delay's supported duration.
+        while (next > DateTimeOffset.UtcNow)
+        {
+            token.ThrowIfCancellationRequested();
+            var remaining = next - DateTimeOffset.UtcNow;
+            if (remaining <= TimeSpan.Zero) return;
+            await Task.Delay(remaining > TimeSpan.FromDays(1) ? TimeSpan.FromDays(1) : remaining, token);
+        }
+    }
+
 }

@@ -32,6 +32,27 @@ public final class StockChecks {
         check(AppleClient.retryTime("1", 1000) == 121000, "429 minimum cooldown");
         check(AppleClient.retryTime("180", 1000) == 181000, "429 Retry-After respected");
         check(AppleClient.retryTime("bad", 1000) == 121000, "invalid Retry-After safe default");
+        check(AppleClient.retryTime("9223372036854775807", 1000) == Long.MAX_VALUE, "huge Retry-After cannot overflow");
+        check(AppleClient.retryTime("172800", 1000) == 172801000, "long Retry-After is not shortened to one day");
+        check(AppleClient.retryTime("-1", 1000) == 121000, "negative Retry-After minimum");
+        check(AppleClient.retryTime(" Wed, 21 Oct 2037 07:28:00 GMT ", 1000) > 2000000000000L, "HTTP date Retry-After respected");
+        for (int code : new int[] { 403, 541, 429 }) {
+            int[] calls = { 0 };
+            AppleClient blockedClient = new AppleClient(0, url -> {
+                calls[0]++;
+                return new java.net.HttpURLConnection(new java.net.URL(url)) {
+                    @Override public int getResponseCode() { return code; }
+                    @Override public String getHeaderField(String key) { return null; }
+                    @Override public void connect() { }
+                    @Override public void disconnect() { }
+                    @Override public boolean usingProxy() { return false; }
+                };
+            });
+            Stock.Result blocked = blockedClient.check(t);
+            blockedClient.check(t);
+            check(blocked.kind == Stock.UNKNOWN && calls[0] == 1 && blockedClient.nextAllowed > System.currentTimeMillis() + 110000,
+                "warm-up HTTP " + code + " stops pickup and manual retry");
+        }
         if (args.length > 0 && args[0].equals("--live")) {
             AppleClient client = new AppleClient(0); Stock.Result r = client.check(t);
             System.out.println("LIVE " + Stock.label(r.kind) + " " + r.detail + " checked=" + r.checked);

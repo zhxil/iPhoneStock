@@ -8,9 +8,35 @@ public sealed class AppleClient : IDisposable
     private readonly HttpClient http;
     private readonly SemaphoreSlim gate = new(1);
     private bool warmed;
-    public DateTimeOffset NextAllowed { get; private set; }
-    public AppleClient(HttpMessageHandler? handler = null)
+    private readonly string? cooldownPath;
+    private DateTimeOffset nextAllowed;
+    public DateTimeOffset NextAllowed
     {
+        get => nextAllowed;
+        private set
+        {
+            nextAllowed = value;
+            if (cooldownPath is null) return;
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(cooldownPath))!);
+            var temporary = cooldownPath + ".tmp";
+            File.WriteAllText(temporary, value.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+            File.Move(temporary, cooldownPath, true);
+        }
+    }
+    public AppleClient(HttpMessageHandler? handler = null, string? cooldownPath = null)
+    {
+        this.cooldownPath = cooldownPath;
+        if (cooldownPath is not null && File.Exists(cooldownPath))
+        {
+            try
+            {
+                if (new FileInfo(cooldownPath).Length > 128) throw new InvalidDataException("冷却记录无效");
+                nextAllowed = DateTimeOffset.Parse(File.ReadAllText(cooldownPath), System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.RoundtripKind);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or FormatException)
+            { nextAllowed = DateTimeOffset.UtcNow.AddMinutes(15); }
+        }
         http = new(handler ?? new HttpClientHandler { CookieContainer = new CookieContainer(), AutomaticDecompression = DecompressionMethods.All });
         http.Timeout = TimeSpan.FromSeconds(35);
         http.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36");
@@ -33,6 +59,8 @@ public sealed class AppleClient : IDisposable
                 try
                 {
                     using var warm = await http.GetAsync("https://www.apple.com.cn/shop/bag", HttpCompletionOption.ResponseHeadersRead, token);
+                    var warmFailure = ApplyThrottle(warm);
+                    if (warmFailure is not null) return Unknown(targets, warmFailure);
                 }
                 catch (HttpRequestException) { /* Warm-up is auxiliary, not a stock result. */ }
                 catch (TaskCanceledException) when (!token.IsCancellationRequested) { }
@@ -45,18 +73,8 @@ public sealed class AppleClient : IDisposable
             request.Headers.Accept.ParseAdd("application/json");
             using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
             var status = (int)response.StatusCode;
-            if (status is 403 or 541)
-            {
-                NextAllowed = DateTimeOffset.UtcNow.AddMinutes(15);
-                return Unknown(targets, $"Apple 拦截请求（HTTP {status}），冷却 15 分钟；不能据此判断无货。");
-            }
-            if (status == 429)
-            {
-                var retry = response.Headers.RetryAfter;
-                var delay = retry?.Delta ?? (retry?.Date - DateTimeOffset.UtcNow) ?? TimeSpan.FromMinutes(2);
-                NextAllowed = DateTimeOffset.UtcNow + (delay < TimeSpan.FromMinutes(2) ? TimeSpan.FromMinutes(2) : delay);
-                return Unknown(targets, "Apple 限流（HTTP 429），已延后查询。");
-            }
+            var throttle = ApplyThrottle(response);
+            if (throttle is not null) return Unknown(targets, throttle);
             if (!response.IsSuccessStatusCode) return Unknown(targets, $"Apple 查询失败（HTTP {status}）");
             await using var input = await response.Content.ReadAsStreamAsync(token);
             using var buffer = new MemoryStream();
@@ -72,8 +90,35 @@ public sealed class AppleClient : IDisposable
         catch (OperationCanceledException) when (callerToken.IsCancellationRequested) { throw; }
         catch (OperationCanceledException) { return Unknown(targets, "查询超时，请检查网络"); }
         catch (HttpRequestException ex) { return Unknown(targets, $"网络连接失败：{ex.HttpRequestError}"); }
-        catch (IOException) { return Unknown(targets, "响应读取中断"); }
+        catch (IOException) { return Unknown(targets, "响应或请求冷却记录读写失败，未作库存判断"); }
+        catch (UnauthorizedAccessException) { return Unknown(targets, "请求冷却记录无法保存，已停止本次查询"); }
         finally { gate.Release(); }
+    }
+    private string? ApplyThrottle(HttpResponseMessage response)
+    {
+        var status = (int)response.StatusCode;
+        if (status is 403 or 541)
+        {
+            NextAllowed = DateTimeOffset.UtcNow.AddMinutes(15);
+            return $"Apple 拦截请求（HTTP {status}），冷却 15 分钟；不能据此判断无货。";
+        }
+        if (status != 429) return null;
+        var now = DateTimeOffset.UtcNow;
+        var next = now.AddMinutes(2);
+        // Parse raw headers: malformed Retry-After must not crash the monitor.
+        if (response.Headers.TryGetValues("Retry-After", out var values))
+        {
+            var raw = values.FirstOrDefault()?.Trim();
+            if (long.TryParse(raw, out var seconds) && seconds >= 0)
+            {
+                var remaining = (DateTimeOffset.MaxValue - now).TotalSeconds;
+                next = seconds >= remaining ? DateTimeOffset.MaxValue : now.AddSeconds(Math.Max(120, seconds));
+            }
+            else if (DateTimeOffset.TryParse(raw, System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.AssumeUniversal, out var date) && date > next) next = date;
+        }
+        NextAllowed = next;
+        return "Apple 限流（HTTP 429），已延后查询。";
     }
     public static IReadOnlyList<Result> Parse(byte[] raw, IReadOnlyList<Target> targets)
     {

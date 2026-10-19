@@ -13,7 +13,7 @@ public sealed partial class MainWindow : Window
 {
     private readonly Catalog catalog = new();
     private readonly SettingsStore store = new(Path.Combine(SettingsStore.DefaultDirectory, "settings.v1.json"));
-    private readonly AppleClient client = new();
+    private readonly AppleClient client = new(cooldownPath: Path.Combine(SettingsStore.DefaultDirectory, "request-cooldown.txt"));
     private readonly PushService push = new();
     private readonly Monitor monitor;
     private Settings settings;
