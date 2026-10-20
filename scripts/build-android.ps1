@@ -7,6 +7,9 @@ if(!$Gradle){
  $candidate=Get-ChildItem (Join-Path $env:USERPROFILE '.gradle/wrapper/dists/.gradle-bootstrap') -Filter gradle.bat -Recurse -ErrorAction SilentlyContinue|Select-Object -First 1
  if($candidate){$Gradle=$candidate.FullName}else{$Gradle='gradle'}
 }
+$versionMatch=[regex]::Match((Get-Content (Join-Path $root 'android/app/build.gradle') -Raw), "versionName '([^']+)'")
+if(!$versionMatch.Success){throw '无法读取 Android 版本号'}
+$version=$versionMatch.Groups[1].Value
 $env:JAVA_HOME=$JavaHome;$env:ANDROID_HOME=$Sdk
 $build=Join-Path $env:TEMP ('iphone-stock-compose-'+(Get-Date -Format yyyyMMdd-HHmmss))
 $project=Join-Path $build 'project'
@@ -31,11 +34,11 @@ if (!(Test-Path $keystore)) {
     [IO.File]::WriteAllText($passwordFile,$password,[Text.Encoding]::ASCII)
     & (Join-Path $JavaHome 'bin/keytool.exe') -genkeypair -keystore $keystore -storetype PKCS12 -storepass:file $passwordFile -keypass:file $passwordFile -alias iphone-stock -keyalg RSA -keysize 3072 -validity 10000 -dname 'CN=Qingdao iPhone Stock Local,OU=Personal Tools,O=Local,C=CN'; EnsureExit '创建签名密钥'
 }
-$apk = Join-Path $build 'IphoneStock-v1.1.0.apk'
+$apk = Join-Path $build "IphoneStock-v$version.apk"
 & (Join-Path $JavaHome 'bin/java.exe') -jar (Join-Path $tools 'lib/apksigner.jar') sign --ks $keystore --ks-key-alias iphone-stock --ks-pass "file:$passwordFile" --out $apk $aligned; EnsureExit 'APK 签名'
 & (Join-Path $JavaHome 'bin/java.exe') -jar (Join-Path $tools 'lib/apksigner.jar') verify --verbose --print-certs $apk | Tee-Object -FilePath (Join-Path $root 'artifacts/android-signature.txt'); EnsureExit '签名检查'
 & (Join-Path $tools 'aapt2.exe') dump badging $apk | Set-Content (Join-Path $root 'artifacts/android-badging.txt'); EnsureExit 'APK 清单检查'
-$destination = Join-Path $output 'iPhone库存助手-Android-v1.1.0.apk'
+$destination = Join-Path $output "iPhone库存助手-Android-v$version.apk"
 Copy-Item -LiteralPath $apk -Destination $destination
 Get-FileHash -LiteralPath $destination -Algorithm SHA256 | ConvertTo-Json | Tee-Object -FilePath (Join-Path $root 'artifacts/android-hash.json')
 Write-Output "APK: $destination"

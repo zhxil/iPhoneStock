@@ -1,6 +1,9 @@
 param()
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
+$versionMatch=[regex]::Match((Get-Content (Join-Path $root 'android/app/build.gradle') -Raw), "versionName '([^']+)'")
+if(!$versionMatch.Success){throw '无法读取 Android 版本号'}
+$version=$versionMatch.Groups[1].Value
 $stage=Join-Path $root ('.tools/android-source-v11-'+(Get-Date -Format yyyyMMdd-HHmmss))
 $output=Join-Path $root 'dist/android'
 New-Item -ItemType Directory -Force $stage,$output|Out-Null
@@ -15,7 +18,7 @@ Copy-Item (Join-Path $root 'LICENSE'),(Join-Path $root 'NOTICE') -Destination $s
 Copy-Item (Join-Path $root 'LICENSE'),(Join-Path $root 'NOTICE') -Destination $output
 Copy-Item (Join-Path $root 'android/README.md') -Destination (Join-Path $output '使用说明.md')
 Copy-Item (Join-Path $root 'android/SUPER_ISLAND.md') -Destination (Join-Path $output '超级岛接入说明.md')
-Compress-Archive -Path (Join-Path $stage '*') -DestinationPath (Join-Path $output 'Android-v1.1.0-对应源码.zip') -Force
-$names=@('iPhone库存助手-Android-v1.1.0.apk','Android-v1.1.0-对应源码.zip','使用说明.md','超级岛接入说明.md','LICENSE','NOTICE','验证记录-v1.1.txt')
-$names|ForEach-Object { $path=Join-Path $output $_; if(Test-Path $path){'{0}  {1}' -f (Get-FileHash $path -Algorithm SHA256).Hash.ToLowerInvariant(),$_} }|Set-Content (Join-Path $output 'SHA256SUMS-v1.1.txt') -Encoding utf8
-Get-FileHash (Join-Path $output 'iPhone库存助手-Android-v1.1.0.apk'),(Join-Path $output 'Android-v1.1.0-对应源码.zip') -Algorithm SHA256
+Compress-Archive -Path (Join-Path $stage '*') -DestinationPath (Join-Path $output "Android-v$version-对应源码.zip") -Force
+$names=@("iPhone库存助手-Android-v$version.apk","Android-v$version-对应源码.zip",'使用说明.md','超级岛接入说明.md','LICENSE','NOTICE',"验证记录-v$version.txt")
+$names|ForEach-Object { $path=Join-Path $output $_; if(Test-Path $path){'{0}  {1}' -f (Get-FileHash $path -Algorithm SHA256).Hash.ToLowerInvariant(),$_} }|Set-Content (Join-Path $output "SHA256SUMS-v$version.txt") -Encoding utf8
+Get-FileHash (Join-Path $output "iPhone库存助手-Android-v$version.apk"),(Join-Path $output "Android-v$version-对应源码.zip") -Algorithm SHA256

@@ -107,7 +107,7 @@ public sealed partial class MainWindow
         var alerts = new StackPanel { Spacing = 16 }; alerts.Children.Add(bark); alerts.Children.Add(feishu);
         var pushHelp = Text("推送地址仅保存在本机。飞书机器人关键词请设置为“有货”。", 12); pushHelp.Opacity = 0.65; alerts.Children.Add(pushHelp); page.Children.Add(Card(alerts));
         page.Children.Add(Text("应用", 16, true));
-        var app = new StackPanel { Spacing = 12 }; app.Children.Add(Text("iPhone库存助手  1.3.1", 14));
+        var app = new StackPanel { Spacing = 12 }; app.Children.Add(Text("iPhone库存助手  1.3.2", 14));
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         var folder = new Button { Content = "打开配置目录" }; folder.Click += (_, _) => { Directory.CreateDirectory(SettingsStore.DefaultDirectory); Process.Start(new ProcessStartInfo(SettingsStore.DefaultDirectory) { UseShellExecute = true }); };
         var exit = new Button { Content = "退出程序" }; exit.Click += (_, _) => Quit(); actions.Children.Add(folder); actions.Children.Add(exit); app.Children.Add(actions); page.Children.Add(Card(app));

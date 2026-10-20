@@ -8,7 +8,7 @@
 
 关注 Apple 中国大陆直营店的 iPhone 到店取货库存。选好门店、机型和配色，开始监控；有货时提醒，一键打开对应款式的购买页。
 
-**[下载 Windows 版](https://github.com/zhxil/iPhoneStock/releases/latest)** · **[下载 Android 版](https://github.com/zhxil/iPhoneStock/releases/latest)** · [构建说明](#从源码构建) · [更新记录](docs/releases/v1.3.1.md)
+**[下载 Windows 版](https://github.com/zhxil/iPhoneStock/releases/latest)** · **[下载 Android 版](https://github.com/zhxil/iPhoneStock/releases/latest)** · [构建说明](#从源码构建) · [更新记录](docs/releases/v1.3.2.md)
 
 ## 界面
 
@@ -63,8 +63,8 @@ Windows 浅色模式：
 
 | 平台 | 版本 | 下载文件 |
 | --- | --- | --- |
-| Windows x64 | 1.3.1 | `iPhoneStock-Windows-x64-v1.3.1.zip` |
-| Android 8.0+ | 1.1.0 | `iPhoneStock-Android-v1.1.0.apk` |
+| Windows x64 | 1.3.2 | `iPhoneStock-Windows-x64-v1.3.2.zip` |
+| Android 8.0+ | 1.1.1 | `iPhoneStock-Android-v1.1.1.apk` |
 
 **Windows**：解压完整文件夹，双击 `IphoneStock.exe`，选择目标后开始监控。便携包自带 .NET 和 Windows App SDK，无需另装运行库。关闭窗口后收进托盘，电脑需保持联网且不休眠。
 
@@ -117,9 +117,9 @@ Android 首次构建会在 `.tools/android-signing` 生成本地签名密钥，�
 
 ## 验证
 
-Windows 已通过 21 项核心检查，并完成界面交互、后台生命周期及四页深色→浅色→深色切换验证。Android 已通过 27 项 JVM 检查，并完成 AOSP Android 36 模拟器交互验证。
+Windows 已通过 31 项核心检查，并完成界面交互、后台生命周期及四页深色→浅色→深色切换验证。Android 已通过 34 项 JVM 检查，并完成 AOSP Android 36 模拟器交互验证。
 
-未完成干净 Windows 虚拟机、实体小米 17 Ultra、长时间锁屏、实际开机重启和外部 Bark / 飞书送达验收。验证概况见 [本版发布说明](docs/releases/v1.3.1.md)。
+未完成干净 Windows 虚拟机、实体小米 17 Ultra、长时间锁屏、实际开机重启和外部 Bark / 飞书送达验收。验证概况见 [本版发布说明](docs/releases/v1.3.2.md)。
 
 ## 结构
 

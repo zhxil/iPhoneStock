@@ -1,6 +1,7 @@
+param([string]$ReleaseDirectory = 'dist/青岛iPhone库存助手', [string]$ArchivePath = 'dist/iPhone库存助手-Windows-x64.zip')
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$release = Join-Path $root 'dist/青岛iPhone库存助手'
+$release = Join-Path $root $ReleaseDirectory
 $stage = Join-Path $root ('.tools/source-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
 New-Item -ItemType Directory -Force $stage | Out-Null
 foreach ($folder in @('native','scripts','docs')) {
@@ -19,5 +20,5 @@ $files = Get-ChildItem $release -File -Recurse | Where-Object Name -ne 'SHA256SU
     '{0}  {1}' -f (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(),[IO.Path]::GetRelativePath($release,$_.FullName)
 }
 $files | Set-Content (Join-Path $release 'SHA256SUMS.txt') -Encoding utf8
-Compress-Archive -LiteralPath $release -DestinationPath (Join-Path $root 'dist/iPhone库存助手-Windows-x64.zip') -Force
-Get-FileHash (Join-Path $root 'dist/iPhone库存助手-Windows-x64.zip') -Algorithm SHA256
+Compress-Archive -LiteralPath $release -DestinationPath (Join-Path $root $ArchivePath) -Force
+Get-FileHash (Join-Path $root $ArchivePath) -Algorithm SHA256

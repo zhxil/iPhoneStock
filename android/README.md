@@ -1,8 +1,8 @@
-# iPhone 库存助手 · Android 1.1
+# iPhone 库存助手 · Android 1.1.1
 
 界面采用 **Kotlin + Jetpack Compose + Google Material 3 + Navigation Compose**；库存查询、配置和前台服务沿用 Java。不是网页套壳，不使用 Rust；手机独立查询，不依赖电脑或 Google Play 服务。
 
-安装包：`dist/android/iPhone库存助手-Android-v1.1.0.apk`。Android 8.0（API 26）以上，compile / target SDK 36；包含 arm64-v8a、armeabi-v7a、x86、x86_64。沿用 1.0 的签名与包名，可直接覆盖安装，避免卸载导致配置丢失。
+安装包：`dist/android/iPhone库存助手-Android-v1.1.1.apk`。Android 8.0（API 26）以上，compile / target SDK 36；包含 arm64-v8a、armeabi-v7a、x86、x86_64。沿用 1.0 的签名与包名，可直接覆盖安装，避免卸载导致配置丢失。
 
 ## 界面与操作
 

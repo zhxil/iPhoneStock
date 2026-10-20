@@ -35,4 +35,4 @@
 - Android：24 项库存 JVM 检查及 10 项超级岛参数检查通过，包含三个暖场拒绝状态与长 Retry-After 边界。
 - Windows 自包含发布构建通过；离线回执保留于本机 `artifacts/risk-audit-20261019`。
 - 没有通过真实被拦网络或小米实体机验证；离线检查不能证明 Apple 一定放行。
-- 本次源码补丁不替换已发布的 v1.3.1 / Android v1.1.0 附件，原 Release 不含这些新修复。
+- 修复随 Windows v1.3.2 / Android v1.1.1 发布；旧版 v1.3.1 / Android v1.1.0 附件保留，不含这些新修复。

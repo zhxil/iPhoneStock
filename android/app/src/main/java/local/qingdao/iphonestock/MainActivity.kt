@@ -214,7 +214,7 @@ class MainActivity : ComponentActivity() {
             } } }
             item { SectionTitle("运行说明") }
             item { Text("Android 15+ 对 dataSync 前台服务通常设有后台 24 小时合计 6 小时预算；回到应用前台会重置系统计时。到时停止并提醒，不能保证全天每分钟查询。省电也可能延后联网。", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            item { Text("1.1.0 · Jetpack Compose / Material 3\n原项目 ENCHIGO/apple-pickup-watcher · GPL-3.0-or-later\n商品图片来自 Apple，权利归 Apple 所有。", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            item { Text("1.1.1 · Jetpack Compose / Material 3\n原项目 ENCHIGO/apple-pickup-watcher · GPL-3.0-or-later\n商品图片来自 Apple，权利归 Apple 所有。", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
     }
     @Composable private fun SettingSwitch(title: String, detail: String, checked: Boolean, onChecked: (Boolean) -> Unit) {
